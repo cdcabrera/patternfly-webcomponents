@@ -16,3 +16,6 @@ pf-tooltip {
   position: relative;
   top: -16px;
   left: 94px; }
+
+pf-dropdown {
+  display: block; }
