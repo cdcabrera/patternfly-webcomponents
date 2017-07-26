@@ -51,19 +51,22 @@ var PfTabs = exports.PfTabs = function (_HTMLElement) {
      * Called every time the element is inserted into the DOM
      */
     value: function connectedCallback() {
-      this.insertBefore(this._tabsTemplate.content, this.firstChild);
+      if (!this._initialized) {
+        this.insertBefore(this._tabsTemplate.content, this.firstChild);
 
-      this._makeTabsFromPfTab();
+        this._makeTabsFromPfTab();
 
-      this.querySelector('ul').addEventListener('click', this);
+        this.querySelector('ul').addEventListener('click', this);
 
-      // Add the ul class if specified
-      this.querySelector('ul').className = this.attributes.class ? this.attributes.class.value : 'nav nav-tabs';
+        // Add the ul class if specified
+        this.querySelector('ul').className = this.attributes.class ? this.attributes.class.value : 'nav nav-tabs';
 
-      if (!this.mutationObserver) {
-        this.mutationObserver = new MutationObserver(this._handleMutations.bind(this));
-        this.mutationObserver.observe(this, { childList: true, attributes: true });
+        if (!this.mutationObserver) {
+          this.mutationObserver = new MutationObserver(this._handleMutations.bind(this));
+          this.mutationObserver.observe(this, { childList: true, attributes: true });
+        }
       }
+      this._initialized = true;
     }
 
     /*
@@ -263,19 +266,23 @@ var PfTabs = exports.PfTabs = function (_HTMLElement) {
     key: '_makeTabsFromPfTab',
     value: function _makeTabsFromPfTab() {
       var ul = this.querySelector('ul');
-      var pfTabs = this.querySelectorAll('pf-tab');
-      [].forEach.call(pfTabs, function (pfTab, idx) {
-        var tab = this._makeTab(pfTab);
-        ul.appendChild(tab);
-        this.tabMap.set(tab, pfTab);
-        this.panelMap.set(pfTab, tab);
+      if (this.children && this.children.length) {
+        var pfTabs = [].slice.call(this.children).filter(function (node) {
+          return node.nodeName === 'PF-TAB';
+        });
+        [].forEach.call(pfTabs, function (pfTab, idx) {
+          var tab = this._makeTab(pfTab);
+          ul.appendChild(tab);
+          this.tabMap.set(tab, pfTab);
+          this.panelMap.set(pfTab, tab);
 
-        if (idx === 0) {
-          this._makeActive(tab);
-        } else {
-          pfTab.style.display = 'none';
-        }
-      }.bind(this));
+          if (idx === 0) {
+            this._makeActive(tab);
+          } else {
+            pfTab.style.display = 'none';
+          }
+        }.bind(this));
+      }
     }
 
     /**

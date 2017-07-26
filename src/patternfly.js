@@ -22,6 +22,9 @@ require('pf-tooltip.component.js');
 /** PF Utilization Bar Chart **/
 require('pf-utilization-bar-chart.component.js');
 
+/** PF Modal Component **/
+require('pf-modal.component.js');
+
 /** PF Utils **/
 require('pf-utils.js');
 
@@ -33,3 +36,9 @@ require('pf-hello.component.js');
 
 /** PF Dropdown **/
 require('pf-dropdown.component.js');
+
+/** PF Touchspin **/
+require('pf-touchspin.component.js')
+
+/** PF Popover **/
+require('pf-popover.component.js');
