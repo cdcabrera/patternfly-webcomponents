@@ -1,11 +1,13 @@
-var gulp = require('gulp'),
-  browserSync = require('browser-sync').create(),
-  browserSyncPort = 3000,
-  baseUrl = 'http://localhost:' + browserSyncPort,
-  eslint = require('gulp-eslint'),
-  gettext = require("gulp-gettext-parser"),
-  ignore = require('gulp-ignore'),
-  Karma = require('karma').Server,
+
+/*
+const gulp              = require('gulp'),
+      browserSync       = require('browser-sync').create(),
+      browserSyncPort   = 3000,
+      baseUrl           = 'http://localhost:' + browserSyncPort,
+      eslint            = require('gulp-eslint'),
+      gettext           = require("gulp-gettext-parser"),
+      ignore            = require('gulp-ignore'),
+        Karma = require('karma').Server,
   path = require('path'),
   rename = require("gulp-rename"),
   sass = require('gulp-sass'),
@@ -17,132 +19,221 @@ var gulp = require('gulp'),
   runBundleAnalyzer = false,
   jsdoc = require('gulp-jsdoc3'),
   BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+*/
 
-gulp.task('font', function () {
-  return gulp.src(['node_modules/patternfly/dist/fonts/*'])
-    .pipe(gulp.dest('dist/fonts'));
-});
+const packageJson   = require('./package.json'),
 
-gulp.task('js', ['lint', 'copy'], function () {
-  return gulp.src(['src/*/*.js', '!src/*/*.spec.js'])
-    .pipe($.plumber())
-    .pipe($.babel(
-      { presets: ['es2015'] }
-    ))
-    // .pipe($.uglify())
-    .pipe(gulp.dest('dist/es2015'));
-});
+      browserSync   = require('browser-sync'),
 
-gulp.task('copy', function () {
-  return gulp.src(['src/customElementShim.js', ''])
-    .pipe(gulp.dest('dist/js'));
-});
+      del           = require('del'),
+      gulp          = require('gulp'),
+      sass          = require('gulp-sass'),
+    //less            = require('gulp-less'),
+    //concat          = require('gulp-concat'),
+      jshint        = require('gulp-jshint'),
+    //jsonLint        = require("gulp-jsonlint"),
+    //wrap            = require('gulp-wrap'),
+    //insert          = require('gulp-insert'),
+    //ts              = require('gulp-typescript'),
+    //rollup          = require('gulp-rollup'),
+    //rollupBabel     = require("rollup-plugin-babel"),
 
-gulp.task('doc', function (cb) {
-  var config = require('./jsdocConfig.json');
-  gulp.src(['README.md', './src/**/*.component.js', './src/pf-utils/*-utils.js'], { read: false })
-    .pipe(jsdoc(config, cb));
-});
+    //babel           = require("gulp-babel"),
+    //babelExtHelpers = require("babel-plugin-external-helpers"),
+    //browserify      = require("browserify"),
 
-gulp.task('lint', function () {
-  return gulp.src(['src/*/*.js'])
-    .pipe(eslint('.eslintrc.json'))
-    .pipe(eslint.failOnError());
-});
+    //gettext         = require("gulp-gettext-parser"),
 
-gulp.task('scss', function () {
-  return gulp.src(['src/scss/*.scss'])
-    .pipe($.plumber())
-    .pipe(sass().on('error', sass.logError))
-    .pipe(gulp.dest('dist/css'));
-});
+    //acorn           = require('acorn'),
+    //acornDynamic    = require('acorn-dynamic-import'),
 
-gulp.task('css', function () {
-  return gulp.src(['node_modules/patternfly/dist/css/**/*'])
-    .pipe(gulp.dest('dist/css'));
-});
+      karma         = require('karma').Server;
 
 
-gulp.task('test', function (done) {
-  new Karma({
-    configFile: __dirname + '/karma.conf.js',
-    singleRun: true
-  }, done).start();
-});
 
-gulp.task('test-debug', function (done) {
-  new Karma({
-    configFile: __dirname + '/karma.conf.js',
-    singleRun: false,
-    browsers: ['Chrome']
-  }, done).start();
-});
+const settings = {
+    version:        (packageJson.version || ''),
+    servePath:      './src',
+    serveRoutes: {
 
-gulp.task('sitespeedio', ['serve'], function (done) {
-  var run = sitespeedio({
-    urls: [
-      baseUrl + '/app/app.html?file=pf-alert',
-      baseUrl + '/app/app.html?file=pf-tabs',
-      baseUrl + '/app/app.html?file=pf-utilization-bar-chart',
-      baseUrl + '/app/app.html?file=pf-list-view',
-      baseUrl + '/app/app.html?file=pf-tooltip',
-      baseUrl + '/app/app.html?file=pf-modal'
-    ],
-    browser: 'chrome',
-    resultBaseDir: './perf/',
-    connection: 'cable',
-    html: true,
-    budget: {
-      page: {
-        pageWeight: 1000000,
-        imageWeight: 300000,
-        jsWeight: 500000,
-        cssWeight: 500000
-      }
-    }
-  });
-  run(done);
-});
-
-gulp.task('perf', function (done) {
-  runSequence('build', 'sitespeedio', done);
-});
-
-gulp.task('bundleAnalyzer', function (done) {
-  runBundleAnalyzer = true;
-  runSequence('build', done);
-});
-
-gulp.task('webpack', ['js'], function () {
-  var webpackConfig = require('./webpack.config.js');
-  if (runBundleAnalyzer) {
-    webpackConfig.plugins.push(new BundleAnalyzerPlugin());
-  }
-  return gulp.src('src/patternfly.js')
-    .pipe(webpackStream(webpackConfig, webpack))
-    .pipe(gulp.dest('dist/js'));
-});
-
-gulp.task('gettext-extract', function () {
-  return gulp.src(["src/**/*.js"])
-    .pipe(gettext())
-    .pipe(rename("patternfly.pot"))
-    .pipe(gulp.dest("dist/i18n"));
-});
-
-gulp.task('build', ['font', 'js', 'scss', 'css', 'gettext-extract', 'webpack']);
-
-gulp.task('serve', function () {
-  browserSync.init({
-    server: {
-      baseDir: './'
+        '/node_modules': './node_modules',
+        '/local': './.cache'
     },
-    port: browserSyncPort
-  });
 
-  gulp.watch('index.html', ['build']);
-  gulp.watch('app/*.html', ['build']);
-  gulp.watch('src/**/*.js', ['build']);
-  gulp.watch('src/**/*.html', ['build']);
-  gulp.watch("dist/**/*").on('change', browserSync.reload);
+    genericMatch:   ['./src/**/*.md'],
+    graphicMatch:   ['./src/**/*.png','./src/**/*.jpg','./src/**/*.gif'],
+    jsonMatch:      ['./src/data/**/*.json'],
+
+    //tsMatch:        ['./src/**/*.ts', '!src/**/*.dev.ts', '!src/**/*spec.ts', '!src/bower_components/**/*.ts'],
+    jsMatch:        ['./src/**/*.js', '!src/**/*.dev.js', '!src/**/*spec.js', '!src/bower_components/**/*.js'],
+    jsVendor:       [
+        //'./node_modules/@webcomponents/custom-elements/src/native-shim.js'
+        //'./node_modules/requirejs/require.js'
+        //'./node_modules/webcomponents.js/custom-elements-es5-adapter.js',
+        //'./node_modules/webcomponents.js/webcomponents-hi-sd-ce.js',
+        //'./node_modules/webcomponents.js/webcomponents-lite.js',
+        //'./node_modules/webcomponents.js/webcomponents-loader.js',
+        //'./node_modules/systemjs/dist/system-production.js'
+    ],
+
+    //jsHintMatch:    ['./src/**/*.js', 'src/**/*.dev.js',  '!src/**/*spec.js', '!src/bower_components/**/*.js'],
+
+    imgMatch:       ['./src/images/**/*'],
+    cssMatch:       ['./src/styles/**/*.css', './src/styles/.cache/**/*.css'],
+
+    htmlMatch:      ['./src/**/*.html','!src/**/*.dev.html'],
+    indexMatch:     ['./src/index.html'],
+    partialMatch:   ['./src/components/**/*.html'],
+
+    scssMain:       ['./src/styles/patternfly-webcomponents.scss'],
+    scssMatch:      ['./src/**/*.scss'],
+
+    lessMain:       ['./src/styles/less/app.less'],
+    lessMatch:      ['./src/styles/**/*.less'],
+    //lessCache:      './src/styles/.cache',
+
+    cache:              './.cache',
+    distCssFile:        './dist/css',
+    distJsFile:         'pf-wc.js',
+    distJsVendorFile:   'vendor.js',
+    dist:               './dist'
+
+
+
+};
+
+
+/**
+ * Clean up the distribution directory
+ */
+gulp.task('clean', function () {
+
+    return del([settings.dist+'/**/*']);
+});
+
+
+/**
+ * Copy markdown, HTML, partials and CSS over to dist
+ */
+gulp.task('copy', function () {
+
+    //gulp.src(settings.htmlMatch, { base: settings.servePath })
+    //    .pipe(gulp.dest(settings.dist));
+
+    //gulp.src(settings.imgMatch, { base: settings.servePath })
+    //    .pipe(gulp.dest(settings.dist));
+});
+
+
+/**
+ * Compile SCSS into CSS
+ */
+gulp.task('scss', function () {
+
+    return gulp.src(settings.scssMain)
+        //.pipe($.plumber())
+        .pipe(sass().on('error', sass.logError))
+        .pipe(gulp.dest(settings.distCssFile));
+    /*
+     return gulp.src(settings.lessMain)
+     .pipe(less())
+     .pipe(gulp.dest(settings.cache))
+     .pipe(browserSync.reload({ stream: true }));*/
+});
+
+
+/**
+ * Run unit test
+ */
+gulp.task('unit-test', function (done) {
+
+    new karma({
+
+        configFile: __dirname + '/karma.conf.js',
+        singleRun: true
+
+    }, done).start();
+});
+
+
+/**
+ * JSHint JS files
+ */
+gulp.task('js-hint', function () {
+
+    return gulp.src(settings.jsMatch)
+        .pipe(jshint())
+        .pipe(jshint.reporter('default'))
+        .pipe(browserSync.reload({ stream: true }));
+});
+
+
+gulp.task('js', ['js-hint'], function () {
+
+
+});
+
+gulp.task('build', ['js-hint', 'copy', 'clean', 'less'], function () {
+
+});
+
+
+
+/**
+ * Launch local file serve and api spoof from api-blueprint.
+ */
+gulp.task('browser-sync', ['scss', 'js'], function () {
+
+    browserSync({
+        server: {
+            middleware: [],
+            baseDir:    settings.servePath,
+            routes:     settings.serveRoutes || {},
+            directory:  true
+        }
+    });
+
+    gulp.watch(settings.scssMatch, ['scss']);
+
+    gulp.watch(settings.jsMatch, ['js', 'unit-test']);
+
+    gulp.watch([settings.servePath+'/**/*']).on('change', browserSync.reload);
+});
+
+
+/**
+ * Serve files
+ */
+gulp.task('serve', ['scss', 'js-hint'], function () {
+
+    browserSync({
+        server: {
+            baseDir:    settings.servePath,
+            routes:     settings.serveRoutes,
+            directory:  true
+        }
+    });
+
+    gulp.watch(settings.lessMatch, ['less']);
+
+    gulp.watch(settings.jsMatch, ['js-hint', 'unit-test']);
+
+    gulp.watch([settings.servePath+'/**/*']).on('change', browserSync.reload);
+});
+
+
+/**
+ * Serve files from dist.
+ */
+gulp.task('serve-dist', ['scss', 'js-hint'], function () {
+
+    browserSync({
+        server: {
+            baseDir:    settings.dist,
+            routes:     settings.serveRoutes,
+            directory:  true
+        }
+    });
+
+    gulp.watch([settings.dist+'/**/*']).on('change', browserSync.reload);
 });
